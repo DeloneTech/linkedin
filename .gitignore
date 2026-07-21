@@ -1,0 +1,18 @@
+# Repo Git independiente (remote propio: globodai-group/mcp-linkedin-sales-navigator)
+mcp-linkedin-sales-navigator/
+
+# Dependencias y builds
+node_modules/
+dist/
+build/
+*.log
+
+# Temporales de Office / Windows
+~$*
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Entorno
+.env
+.env.local

@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DeloneTech · Simulador de ahorro y demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ===== APP TOPBAR ===== -->
+<header class="topbar">
+  <div class="topbar__brand">DELONE<span>TECH</span></div>
+  <nav class="tabs" id="tabs">
+    <button class="tab is-active" data-view="ahorro">Cuánto te ahorras</button>
+    <button class="tab" data-view="demo">Demo del software</button>
+  </nav>
+  <span class="topbar__tag">Software a medida · Logística y transporte</span>
+</header>
+
+<!-- =========================================================
+     VIEW 1 · CALCULADORA DE AHORRO
+========================================================= -->
+<main class="view is-active" id="view-ahorro">
+  <div class="view__head">
+    <p class="eyebrow">Simulador</p>
+    <h1>¿Cuánto te ahorra DeloneTech al año?</h1>
+    <p class="sub">Mueve los datos de tu operación y míralo en tiempo real. Sin humo: solo horas, euros y expediciones.</p>
+  </div>
+
+  <div class="calc">
+    <!-- INPUTS -->
+    <section class="panel inputs">
+      <h2 class="panel__title">Tu operación hoy</h2>
+
+      <label class="field">
+        <span class="field__top"><span>Expediciones al mes</span><output id="o_exp">2.000</output></span>
+        <input type="range" id="i_exp" min="200" max="6000" step="50" value="2000" />
+      </label>
+
+      <label class="field">
+        <span class="field__top"><span>Personas en administración / tráfico</span><output id="o_admin">4</output></span>
+        <input type="range" id="i_admin" min="1" max="15" step="1" value="4" />
+      </label>
+
+      <label class="field">
+        <span class="field__top"><span>% de la jornada en tareas manuales</span><output id="o_manual">38%</output></span>
+        <input type="range" id="i_manual" min="15" max="55" step="1" value="38" />
+      </label>
+
+      <label class="field">
+        <span class="field__top"><span>Coste medio por persona / mes</span><output id="o_coste">1.900 €</output></span>
+        <input type="range" id="i_coste" min="1200" max="3200" step="50" value="1900" />
+      </label>
+
+      <label class="field">
+        <span class="field__top"><span>Días medios en cobrar</span><output id="o_dias">45</output></span>
+        <input type="range" id="i_dias" min="15" max="90" step="1" value="45" />
+      </label>
+
+      <label class="field">
+        <span class="field__top"><span>Importe medio por expedición</span><output id="o_ticket">120 €</output></span>
+        <input type="range" id="i_ticket" min="30" max="500" step="5" value="120" />
+      </label>
+
+      <label class="field">
+        <span class="field__top"><span>Gasto en combustible / mes</span><output id="o_fuel">6.000 €</output></span>
+        <input type="range" id="i_fuel" min="500" max="30000" step="250" value="6000" />
+      </label>
+
+      <div class="field">
+        <span class="field__top"><span>Nivel de automatización</span></span>
+        <div class="seg" id="seg_auto">
+          <button data-r="0.30">Conservador</button>
+          <button class="on" data-r="0.45">Realista</button>
+          <button data-r="0.60">Óptimo</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section class="results">
+      <div class="hero-num panel">
+        <p class="hero-num__label">Impacto económico estimado al año</p>
+        <p class="hero-num__value"><span id="r_year">0</span> €</p>
+        <p class="hero-num__hint">≈ <span id="r_month">0</span> € al mes · equivale a liberar <b>~<span id="r_personas">0</span> personas</b> de oficina</p>
+      </div>
+
+      <div class="panel breakdown">
+        <div class="breakdown__h">De dónde sale ese dinero (al año)</div>
+        <ul class="bk">
+          <li><span class="bk__ico">🧑‍💻</span><span class="bk__l">Menos trabajo administrativo</span><b id="b_admin">0 €</b></li>
+          <li><span class="bk__ico">📦</span><span class="bk__l">Margen por mover más sin contratar</span><b id="b_cap">0 €</b></li>
+          <li><span class="bk__ico">🛡️</span><span class="bk__l">Menos errores y albaranes perdidos</span><b id="b_err">0 €</b></li>
+          <li><span class="bk__ico">⛽</span><span class="bk__l">Rutas y combustible optimizados</span><b id="b_fuel">0 €</b></li>
+          <li><span class="bk__ico">💶</span><span class="bk__l">Cobrar antes (coste financiero liberado)</span><b id="b_fin">0 €</b></li>
+        </ul>
+      </div>
+
+      <div class="cards">
+        <div class="rcard">
+          <div class="rcard__ico">⏱</div>
+          <div class="rcard__num"><span id="r_hours">0</span> h</div>
+          <div class="rcard__lbl">horas manuales recuperadas / mes</div>
+        </div>
+        <div class="rcard">
+          <div class="rcard__ico">📦</div>
+          <div class="rcard__num">+<span id="r_extra">0</span></div>
+          <div class="rcard__lbl">expediciones extra/mes con el mismo equipo</div>
+        </div>
+        <div class="rcard">
+          <div class="rcard__ico">💶</div>
+          <div class="rcard__num">−<span id="r_cobro">0</span> días</div>
+          <div class="rcard__lbl">antes cobrando cada expedición</div>
+        </div>
+        <div class="rcard">
+          <div class="rcard__ico">🧾</div>
+          <div class="rcard__num"><span id="r_docs">0</span></div>
+          <div class="rcard__lbl">documentos/mes que dejan de teclearse a mano</div>
+        </div>
+      </div>
+
+      <div class="panel chart">
+        <div class="chart__head">
+          <span>Horas de administración al mes</span>
+          <span class="chart__legend"><i class="dot dot--now"></i>Hoy <i class="dot dot--del"></i>Con DeloneTech</span>
+        </div>
+        <div class="bars">
+          <div class="bar"><div class="bar__fill bar__fill--now" id="bar_now"></div><span class="bar__cap" id="cap_now">0 h</span><span class="bar__x">Hoy</span></div>
+          <div class="bar"><div class="bar__fill bar__fill--del" id="bar_del"></div><span class="bar__cap" id="cap_del">0 h</span><span class="bar__x">DeloneTech</span></div>
+        </div>
+      </div>
+
+      <div class="cost-of">
+        <span>El coste de seguir igual, a 3 años vista:</span>
+        <strong><span id="r_cost">0</span> €</strong>
+      </div>
+    </section>
+  </div>
+  <p class="disclaimer">Estimación orientativa basada en rangos reales de mejora (30–60% de reducción de tareas manuales, +30–50% de expediciones, hasta 15 días antes de cobro) en operaciones de 1 a 50 empleados. La cifra exacta la vemos en la auditoría.</p>
+</main>
+
+<!-- =========================================================
+     VIEW 2 · DEMO DEL SOFTWARE
+========================================================= -->
+<main class="view" id="view-demo">
+  <div class="view__head">
+    <p class="eyebrow">Producto</p>
+    <h1>Así funcionaría tu operación con nosotros</h1>
+    <p class="sub">Un único sistema, hecho a tu medida. Esto es una demo interactiva del tipo de software que construimos.</p>
+  </div>
+
+  <div class="product">
+    <!-- sidebar -->
+    <aside class="side">
+      <div class="side__brand">Tu Operación · <b>en vivo</b></div>
+      <div class="side__sec">Operación</div>
+      <button class="nav is-active" data-panel="panel">Panel</button>
+      <button class="nav" data-panel="mapa">Mapa en vivo</button>
+      <button class="nav" data-panel="exped">Expediciones</button>
+      <button class="nav" data-panel="rutas">Rutas</button>
+      <button class="nav" data-panel="almacen">Almacén</button>
+      <div class="side__sec">Recursos</div>
+      <button class="nav" data-panel="flota">Flota</button>
+      <button class="nav" data-panel="conductores">Conductores</button>
+      <div class="side__sec">Administración</div>
+      <button class="nav" data-panel="albaranes">Albaranes / POD</button>
+      <button class="nav" data-panel="factura">Facturación</button>
+      <button class="nav" data-panel="cobros">Cobros</button>
+      <button class="nav" data-panel="incid">Incidencias</button>
+      <div class="side__sec">Relación</div>
+      <button class="nav" data-panel="clientes">Clientes</button>
+      <button class="nav" data-panel="informes">Informes</button>
+      <div class="side__foot"><span class="pulse"></span> Sincronizado en tiempo real</div>
+    </aside>
+
+    <!-- main -->
+    <section class="board">
+      <!-- PANEL -->
+      <div class="pane is-active" id="p-panel">
+        <div class="kpis">
+          <div class="kpi"><span class="kpi__n" id="k_hoy">148</span><span class="kpi__l">expediciones hoy</span></div>
+          <div class="kpi"><span class="kpi__n" id="k_ruta">37</span><span class="kpi__l">en ruta ahora</span></div>
+          <div class="kpi"><span class="kpi__n kpi__n--ok" id="k_ent">104</span><span class="kpi__l">entregadas</span></div>
+          <div class="kpi"><span class="kpi__n kpi__n--warn" id="k_inc">2</span><span class="kpi__l">incidencias</span></div>
+        </div>
+        <div class="board__row">
+          <div class="widget">
+            <div class="widget__h">Expediciones en tiempo real</div>
+            <table class="tbl" id="tbl_live">
+              <thead><tr><th>Código</th><th>Cliente</th><th>Destino</th><th>Conductor</th><th>Estado</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="widget widget--auto">
+            <div class="widget__h">Facturación automática</div>
+            <div class="auto"><span class="auto__big" id="auto_fact">0</span><span>facturas generadas hoy desde entregas confirmadas</span></div>
+            <div class="auto__bar"><div id="auto_bar"></div></div>
+            <div class="auto__note">✓ Sin teclear. Del albarán a la factura, solo.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXPEDICIONES -->
+      <div class="pane" id="p-exped">
+        <div class="widget">
+          <div class="widget__h">Todas las expediciones · seguimiento del pedido a la entrega</div>
+          <table class="tbl" id="tbl_full">
+            <thead><tr><th>Código</th><th>Cliente</th><th>Origen → Destino</th><th>Conductor</th><th>ETA</th><th>Estado</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ALBARANES -->
+      <div class="pane" id="p-albaranes">
+        <div class="board__row">
+          <div class="widget">
+            <div class="widget__h">Albarán digital + prueba de entrega (POD)</div>
+            <div class="pod">
+              <div class="pod__row"><span>Expedición</span><b>EXP-24817</b></div>
+              <div class="pod__row"><span>Cliente</span><b>Distribuciones Cibeles S.L.</b></div>
+              <div class="pod__row"><span>Bultos</span><b>12 / 12 ✓</b></div>
+              <div class="pod__row"><span>Firma</span><b class="sign">Recibí conforme ✍</b></div>
+              <div class="pod__row"><span>Foto entrega</span><b>📷 adjunta</b></div>
+              <div class="pod__stamp">ENTREGADO · 12:41 · GPS verificado</div>
+            </div>
+          </div>
+          <div class="widget">
+            <div class="widget__h">Se acabó el papel</div>
+            <ul class="checklist">
+              <li>✓ Albarán generado automáticamente</li>
+              <li>✓ Firma y foto del cliente en el móvil del conductor</li>
+              <li>✓ POD guardado y buscable en segundos</li>
+              <li>✓ Se dispara la factura al confirmar la entrega</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- FACTURACION -->
+      <div class="pane" id="p-factura">
+        <div class="widget">
+          <div class="widget__h">Facturación generada desde entregas confirmadas</div>
+          <table class="tbl">
+            <thead><tr><th>Factura</th><th>Cliente</th><th>Expediciones</th><th>Importe</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr><td>F-2026-0912</td><td>Cibeles Logistics</td><td>18</td><td>2.140 €</td><td><span class="badge badge--ok">Emitida auto</span></td></tr>
+              <tr><td>F-2026-0913</td><td>DUPLA Logistics</td><td>26</td><td>3.480 €</td><td><span class="badge badge--ok">Emitida auto</span></td></tr>
+              <tr><td>F-2026-0914</td><td>MACAR Transportes</td><td>11</td><td>1.290 €</td><td><span class="badge badge--wait">En cola</span></td></tr>
+              <tr><td>F-2026-0915</td><td>Truck One</td><td>34</td><td>4.760 €</td><td><span class="badge badge--ok">Emitida auto</span></td></tr>
+            </tbody>
+          </table>
+          <div class="factfoot">Cobras <b>hasta 15 días antes</b> porque la factura sale el mismo día de la entrega, sin errores de albarán.</div>
+        </div>
+      </div>
+
+      <!-- INCIDENCIAS -->
+      <div class="pane" id="p-incid">
+        <div class="widget">
+          <div class="widget__h">Incidencias detectadas al instante</div>
+          <div class="inc inc--red"><b>EXP-24790 · Retraso en ruta</b><span>Conductor avisó a las 11:02 · cliente notificado automáticamente · nueva ETA 14:30</span></div>
+          <div class="inc inc--amber"><b>EXP-24761 · Bulto dañado</b><span>Foto adjunta en la entrega · abierta reclamación · responsable asignado</span></div>
+          <div class="inc inc--ok"><b>EXP-24744 · Resuelta</b><span>Dirección corregida en 3 min · entregada sin coste extra</span></div>
+          <p class="inc__foot">Antes te enterabas tarde y por teléfono. Ahora, en el momento y por sí solo.</p>
+        </div>
+      </div>
+
+      <!-- MAPA EN VIVO -->
+      <div class="pane" id="p-mapa">
+        <div class="board__row board__row--map">
+          <div class="widget">
+            <div class="widget__h">Seguimiento GPS en tiempo real</div>
+            <div class="map" id="map"></div>
+          </div>
+          <div class="widget">
+            <div class="widget__h">Vehículos ahora</div>
+            <ul class="vlist">
+              <li><span class="dotv dotv--ruta"></span> 2847-KLM · <b>En ruta</b><span>Getafe → Toledo · ETA 13:20</span></li>
+              <li><span class="dotv dotv--ruta"></span> 6120-BTR · <b>En ruta</b><span>M-40 · 3 paradas restantes</span></li>
+              <li><span class="dotv dotv--load"></span> 9034-JHG · <b>Cargando</b><span>Base Madrid · sale 12:45</span></li>
+              <li><span class="dotv dotv--stop"></span> 4471-PLK · <b>Parado</b><span>Descanso conductor · 22 min</span></li>
+            </ul>
+            <div class="mapnote">El cliente ve el estado de su envío sin llamarte. Atención al cliente deja de sonar.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RUTAS -->
+      <div class="pane" id="p-rutas">
+        <div class="opt">
+          <div><span class="opt__k">Optimización de rutas de hoy</span><span class="opt__v">−18% km &nbsp;·&nbsp; −4,2 h &nbsp;·&nbsp; ≈ 340 € menos de combustible/mes</span></div>
+          <span class="badge badge--ok">Recalculado automáticamente</span>
+        </div>
+        <div class="widget">
+          <div class="widget__h">Rutas del día</div>
+          <table class="tbl">
+            <thead><tr><th>Ruta</th><th>Vehículo</th><th>Paradas</th><th>Km</th><th>Tiempo</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr><td>R-01 · Sur Madrid</td><td>2847-KLM</td><td>9</td><td>142</td><td>4 h 10</td><td><span class="badge badge--ruta">En curso</span></td></tr>
+              <tr><td>R-02 · Corredor Henares</td><td>6120-BTR</td><td>12</td><td>168</td><td>5 h 05</td><td><span class="badge badge--ruta">En curso</span></td></tr>
+              <tr><td>R-03 · Toledo–CLM</td><td>9034-JHG</td><td>7</td><td>210</td><td>4 h 40</td><td><span class="badge badge--wait">Sale 12:45</span></td></tr>
+              <tr><td>R-04 · Última milla centro</td><td>4471-PLK</td><td>21</td><td>58</td><td>3 h 30</td><td><span class="badge badge--ok">Completada</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ALMACEN -->
+      <div class="pane" id="p-almacen">
+        <div class="kpis">
+          <div class="kpi"><span class="kpi__n">3.412</span><span class="kpi__l">referencias en stock</span></div>
+          <div class="kpi"><span class="kpi__n">86%</span><span class="kpi__l">ocupación de ubicaciones</span></div>
+          <div class="kpi"><span class="kpi__n kpi__n--warn">47</span><span class="kpi__l">pedidos en picking</span></div>
+          <div class="kpi"><span class="kpi__n kpi__n--ok">99,2%</span><span class="kpi__l">fiabilidad de inventario</span></div>
+        </div>
+        <div class="board__row">
+          <div class="widget">
+            <div class="widget__h">Movimientos de hoy</div>
+            <table class="tbl">
+              <thead><tr><th>Hora</th><th>Tipo</th><th>Referencia</th><th>Ubicación</th><th>Uds.</th></tr></thead>
+              <tbody>
+                <tr><td>12:31</td><td><span class="badge badge--ok">Entrada</span></td><td>REF-90183</td><td>A-04-12</td><td>+240</td></tr>
+                <tr><td>12:22</td><td><span class="badge badge--ruta">Salida</span></td><td>REF-77410</td><td>C-11-03</td><td>−80</td></tr>
+                <tr><td>12:08</td><td><span class="badge badge--ruta">Salida</span></td><td>REF-52290</td><td>B-02-19</td><td>−150</td></tr>
+                <tr><td>11:54</td><td><span class="badge badge--ok">Entrada</span></td><td>REF-11002</td><td>A-07-05</td><td>+500</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="widget">
+            <div class="widget__h">Alertas de stock</div>
+            <div class="inc inc--amber"><b>REF-77410 · Stock bajo</b><span>Quedan 40 uds · punto de pedido 60 · sugerido reponer</span></div>
+            <div class="inc inc--red"><b>REF-30988 · Rotura</b><span>0 uds · 2 pedidos afectados · aviso enviado a compras</span></div>
+            <div class="inc inc--ok"><b>Picking optimizado</b><span>Rutas de preparación agrupadas · −25% de recorrido en almacén</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FLOTA -->
+      <div class="pane" id="p-flota">
+        <div class="kpis">
+          <div class="kpi"><span class="kpi__n">18</span><span class="kpi__l">vehículos</span></div>
+          <div class="kpi"><span class="kpi__n kpi__n--ok">14</span><span class="kpi__l">operativos</span></div>
+          <div class="kpi"><span class="kpi__n kpi__n--warn">3</span><span class="kpi__l">mantenim. próximo</span></div>
+          <div class="kpi"><span class="kpi__n kpi__n--warn">2</span><span class="kpi__l">ITV este mes</span></div>
+        </div>
+        <div class="widget">
+          <div class="widget__h">Flota · avisos automáticos de ITV y mantenimiento</div>
+          <table class="tbl">
+            <thead><tr><th>Matrícula</th><th>Tipo</th><th>Km</th><th>Combustible</th><th>Próx. ITV</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr><td>2847-KLM</td><td>Furgón 3.5t</td><td>184.320</td><td>68%</td><td>14 mar</td><td><span class="badge badge--ok">Operativo</span></td></tr>
+              <tr><td>6120-BTR</td><td>Rígido 12t</td><td>402.110</td><td>41%</td><td>02 mar</td><td><span class="badge badge--wait">ITV en 9 días</span></td></tr>
+              <tr><td>9034-JHG</td><td>Tráiler</td><td>631.500</td><td>85%</td><td>28 abr</td><td><span class="badge badge--wait">Mantenim. 5.000 km</span></td></tr>
+              <tr><td>4471-PLK</td><td>Furgoneta</td><td>96.740</td><td>52%</td><td>19 may</td><td><span class="badge badge--ok">Operativo</span></td></tr>
+              <tr><td>7788-QRS</td><td>Rígido 12t</td><td>510.980</td><td>—</td><td>21 feb</td><td><span class="badge badge--inc">En taller</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CONDUCTORES -->
+      <div class="pane" id="p-conductores">
+        <div class="widget">
+          <div class="widget__h">Conductores · jornada y cumplimiento (tacógrafo)</div>
+          <table class="tbl">
+            <thead><tr><th>Conductor</th><th>Estado</th><th>Conducción hoy</th><th>Descanso</th><th>Cumplimiento</th></tr></thead>
+            <tbody>
+              <tr><td>J. Ramírez</td><td><span class="badge badge--ruta">En ruta</span></td><td>4 h 20 / 9 h</td><td>OK</td><td><span class="badge badge--ok">Correcto</span></td></tr>
+              <tr><td>M. Ortega</td><td><span class="badge badge--ruta">En ruta</span></td><td>7 h 50 / 9 h</td><td>en 25 min</td><td><span class="badge badge--wait">Aviso descanso</span></td></tr>
+              <tr><td>L. Fdez</td><td><span class="badge badge--wait">Descanso</span></td><td>3 h 10 / 9 h</td><td>en curso</td><td><span class="badge badge--ok">Correcto</span></td></tr>
+              <tr><td>A. Soto</td><td><span class="badge badge--ok">Disponible</span></td><td>0 h</td><td>—</td><td><span class="badge badge--ok">Correcto</span></td></tr>
+              <tr><td>P. Gil</td><td><span class="badge badge--ruta">En ruta</span></td><td>8 h 55 / 9 h</td><td>ahora</td><td><span class="badge badge--inc">Al límite</span></td></tr>
+            </tbody>
+          </table>
+          <div class="factfoot">El sistema avisa <b>antes</b> de que se incumpla la jornada. Menos sanciones, menos sustos.</div>
+        </div>
+      </div>
+
+      <!-- COBROS -->
+      <div class="pane" id="p-cobros">
+        <div class="kpis">
+          <div class="kpi"><span class="kpi__n">128.400 €</span><span class="kpi__l">pendiente de cobro</span></div>
+          <div class="kpi"><span class="kpi__n kpi__n--ok">41 días</span><span class="kpi__l">→ 26 con nosotros</span></div>
+          <div class="kpi"><span class="kpi__n kpi__n--warn">12.900 €</span><span class="kpi__l">vencido +60 días</span></div>
+          <div class="kpi"><span class="kpi__n kpi__n--ok">96%</span><span class="kpi__l">facturas sin disputa</span></div>
+        </div>
+        <div class="widget">
+          <div class="widget__h">Antigüedad de la deuda (aging)</div>
+          <div class="aging">
+            <div class="aging__row"><span>0–30 días</span><div class="aging__bar"><i style="width:64%"></i></div><b>82.100 €</b></div>
+            <div class="aging__row"><span>31–60 días</span><div class="aging__bar"><i style="width:26%;background:var(--warn)"></i></div><b>33.400 €</b></div>
+            <div class="aging__row"><span>+60 días</span><div class="aging__bar"><i style="width:10%;background:var(--red)"></i></div><b>12.900 €</b></div>
+          </div>
+          <div class="factfoot">Como la factura sale el día de la entrega y sin errores de albarán, <b>cobras hasta 15 días antes</b> y con menos disputas.</div>
+        </div>
+      </div>
+
+      <!-- CLIENTES -->
+      <div class="pane" id="p-clientes">
+        <div class="board__row">
+          <div class="widget">
+            <div class="widget__h">Cartera de clientes</div>
+            <table class="tbl">
+              <thead><tr><th>Cliente</th><th>Exped./mes</th><th>Facturación</th><th>Cobro medio</th><th>Estado</th></tr></thead>
+              <tbody>
+                <tr><td>DUPLA Logistics</td><td>320</td><td>38.400 €</td><td>28 d</td><td><span class="badge badge--ok">Al día</span></td></tr>
+                <tr><td>Cibeles Logistics</td><td>210</td><td>24.100 €</td><td>34 d</td><td><span class="badge badge--ok">Al día</span></td></tr>
+                <tr><td>MACAR Transportes</td><td>140</td><td>15.800 €</td><td>52 d</td><td><span class="badge badge--wait">Revisar</span></td></tr>
+                <tr><td>Truck One</td><td>96</td><td>11.200 €</td><td>30 d</td><td><span class="badge badge--ok">Al día</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="widget">
+            <div class="widget__h">Portal del cliente</div>
+            <ul class="checklist">
+              <li>✓ El cliente ve sus envíos en tiempo real</li>
+              <li>✓ Descarga sus albaranes y POD firmados</li>
+              <li>✓ Consulta y descarga sus facturas</li>
+              <li>✓ Abre incidencias sin llamar por teléfono</li>
+            </ul>
+            <div class="mapnote">Das imagen de empresa grande y liberas a tu equipo del teléfono.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INFORMES -->
+      <div class="pane" id="p-informes">
+        <div class="kpis">
+          <div class="kpi"><span class="kpi__n kpi__n--ok">97,4%</span><span class="kpi__l">entregas a tiempo</span></div>
+          <div class="kpi"><span class="kpi__n">3,18 €</span><span class="kpi__l">coste medio/expedición</span></div>
+          <div class="kpi"><span class="kpi__n kpi__n--ok">1,4%</span><span class="kpi__l">incidencias</span></div>
+          <div class="kpi"><span class="kpi__n">+22%</span><span class="kpi__l">expediciones vs año pasado</span></div>
+        </div>
+        <div class="board__row">
+          <div class="widget">
+            <div class="widget__h">Expediciones por mes</div>
+            <div class="mbars">
+              <div class="mbar" style="--h:40%"><span>Ene</span></div>
+              <div class="mbar" style="--h:52%"><span>Feb</span></div>
+              <div class="mbar" style="--h:48%"><span>Mar</span></div>
+              <div class="mbar" style="--h:63%"><span>Abr</span></div>
+              <div class="mbar" style="--h:71%"><span>May</span></div>
+              <div class="mbar" style="--h:66%"><span>Jun</span></div>
+              <div class="mbar" style="--h:84%"><span>Jul</span></div>
+              <div class="mbar mbar--gold" style="--h:100%"><span>Ago</span></div>
+            </div>
+          </div>
+          <div class="widget">
+            <div class="widget__h">Rentabilidad por ruta</div>
+            <table class="tbl">
+              <thead><tr><th>Ruta</th><th>Margen</th><th>Tendencia</th></tr></thead>
+              <tbody>
+                <tr><td>Sur Madrid</td><td>+18,4%</td><td><span class="badge badge--ok">▲</span></td></tr>
+                <tr><td>Corredor Henares</td><td>+12,1%</td><td><span class="badge badge--ok">▲</span></td></tr>
+                <tr><td>Toledo–CLM</td><td>+6,8%</td><td><span class="badge badge--wait">▬</span></td></tr>
+                <tr><td>Última milla centro</td><td>−2,3%</td><td><span class="badge badge--inc">▼ revisar</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# Normaliza finales de línea: LF en el repo, CRLF en el disco (Windows)
+* text=auto
+
+# Binarios: que Git no toque nada
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.xlsx binary
+*.docx binary
+*.zip binary
